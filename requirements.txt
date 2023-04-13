@@ -1,0 +1,6 @@
+httpx
+fastapi
+jinja2
+uvicorn
+sqlite-utils
+sqlalchemy

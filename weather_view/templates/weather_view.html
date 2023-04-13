@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Weather View</title>
+    <link rel="stylesheet" type="text/css" href="static/css/bulma.css">
+</head>
+
+<body>
+<div id="app" class="container">
+
+    <header class="section">
+        <p class="title">Weather View</p>
+    </header>
+
+    <section id="parameter_selection" class="section">
+        <div class="field has-addons level">
+            <div class="level-left">
+                <div class="level-item">
+                    <p>Zip Code: </p>
+                </div>
+                <div class="control level-item">
+                    <input class="input" name="search_box" type="text" size="15" v-model="search_input" @keyup.enter="search" placeholder="Enter Zip code"/>
+                </div>
+                <div class="control level-item">
+                    <button id="submit1" class="button is-primary" @click="search">Get Weather</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section results" v-for="result in results">
+        <div class="columns">
+            <div class="current_weather card column is-three-fifths">
+                <div class="card-header subtitle is-5 p-1">Current Weather</div>
+                <div class="card-content">
+                    <div class="level">
+                        <div class="date mr-1 level-item">
+                            <div>
+                                <p class="subtitle is-6">[[ new Date().toDateString() ]]</p>
+                                <p class="subtitle is-6">[[ new Date().toLocaleTimeString() ]]</p>
+                            </div>
+                        </div>
+
+                        <div class="temperature level-item is-size-3 mr-3">
+                            <div>
+                                <p class="heading">Temperature</p>
+                                <p class="title">[[ result["hourly"]["temperature_2m"][result["hourly"]["time"].indexOf(result["current_weather"]["time"])] ]]
+                                <span class="temperature-unit is-size-3">F</span></p>
+                            </div>
+                        </div>
+
+                        <div class="rain level-item is-size-3 mr-3">
+                            <div>
+                                <p class="heading">Rain</p>
+                                <p class="title">[[ parseInt(result["hourly"]["rain"][result["hourly"]["time"].indexOf(result["current_weather"]["time"])] * 100) ]]</p>
+                            </div>
+                        </div>
+
+                        <div class="cloudcover level-item is-size-3">
+                            <div>
+                                <p class="heading">Cloudcover</p>
+                                <p class="title">[[ result["hourly"]["cloudcover"][result["hourly"]["time"].indexOf(result["current_weather"]["time"])] ]]</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="columns">
+            <div class="ten_day_summary card column is-three-fifths">
+                <div class="card-header subtitle is-5 p-1">7 Day Summary</div>
+                <div class="card-content">
+                    <table class="table is-striped">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th v-for="(data, day) in summary">
+                                    <div class="day">
+                                        [[ new Date(day).toDateString().split(" ")[0] + " " + day.split("-")[2] ]]
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>High</td>
+                                <td v-for="(data, day) in summary">
+                                    <div class="day-summary">
+                                        [[ data['temp_high'] ]]
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Low</td>
+                                <td v-for="(data, day) in summary">
+                                    <div class="day-summary">
+                                        [[ data['temp_low'] ]]
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="columns">
+            <div class="ten_day_detail card column">
+                <div class="card-header subtitle is-5 p-1">7 Day Detail</div>
+
+                <div class="tabs is-toggle">
+                    <ul>
+                        <li :class="{'is-active': active_tab=='0'}" :key="0" v-on:click="setActiveTab(0)">
+                            <a>[[ result['hourly']['time'][0].split("T")[0] ]]</a>
+                        </li>
+                        <li v-for="day in 6" :class="{'is-active': active_tab==day}" :key="day" v-on:click="setActiveTab(day)">
+                            <a>[[ result['hourly']['time'][day*24].split("T")[0] ]]</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card-content" v-show="active_tab==0">
+                    <div class="forecast table-container">
+                        <table class="table is-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Temperature</th>
+                                    <th>Rain</th>
+                                    <th>Cloudcover</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <tr v-for="(hourly_date, index) in result['hourly']['time'].slice(0,24)">
+                                <th>
+                                    <div class="hourly">
+                                        [[ new Date(result['hourly']['time'][index]+'Z').getHours() ]]:00
+                                    </div>
+                                </th>
+                                <td>
+                                    <div class="hourly">
+                                        [[ result['hourly']['temperature_2m'][index] ]]
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="hourly">
+                                        [[ result['hourly']['rain'][index] ]]
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="hourly">
+                                        [[ result['hourly']['cloudcover'][index] ]]
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+
+                <div class="card-content" v-for="day in 6" :key="day" v-show="active_tab==day">
+                    <div class="forecast table-container">
+                        <table class="table is-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Temperature</th>
+                                    <th>Rain</th>
+                                    <th>Cloudcover</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <tr v-for="(hourly_date, index) in result['hourly']['time'].slice(day*24,day*24+24)">
+                                <th>
+                                    <div class="hourly">
+                                        [[ new Date(result['hourly']['time'][index]+'Z').getHours() ]]:00
+                                    </div>
+                                </th>
+                                <td>
+                                    <div class="hourly">
+                                        [[ result['hourly']['temperature_2m'][24*day+index] ]]
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="hourly">
+                                        [[ result['hourly']['rain'][24*day+index] ]]
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="hourly">
+                                        [[ result['hourly']['cloudcover'][24*day+index] ]]
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+</div>
+<script src="static/lib/vue.global.min.js"></script>
+<script src="static/lib/axios.min.js"></script>
+<script src="static/js/app.js"></script>
+</body>
+</html>
